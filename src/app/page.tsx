@@ -1,120 +1,187 @@
-'use client';
+import Link from 'next/link';
+import { Sparkles, Microscope, Clock, ChevronRight, UploadCloud, TrendingUp } from 'lucide-react';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { BookOpen, ArrowRight, Loader2, FileText } from 'lucide-react';
+// --- MOCK DATA ---
+// In a production app, these would be fetched from your Supabase database.
+const featuredPapers = [
+  {
+    id: 'demo-ai-1',
+    title: 'Attention Is All You Need: A Retrospective on Transformers',
+    category: 'Generative AI',
+    date: 'Sep 21, 2026',
+    readTime: '8 min read',
+    gradient: 'from-blue-600 to-indigo-900',
+  },
+  {
+    id: 'demo-bio-1',
+    title: 'CRISPR-Cas9 Mediated Gene Editing in Solid Tumors: Clinical Efficacy',
+    category: 'Oncology',
+    date: 'Sep 19, 2026',
+    readTime: '12 min read',
+    gradient: 'from-emerald-600 to-teal-900',
+  },
+  {
+    id: 'demo-ai-2',
+    title: 'Scaling Laws for Neural Language Models in 2026',
+    category: 'Machine Learning',
+    date: 'Sep 15, 2026',
+    readTime: '10 min read',
+    gradient: 'from-violet-600 to-purple-900',
+  }
+];
 
-export default function HomePage() {
-  const router = useRouter();
-  const [doi, setDoi] = useState('');
-  const [sourceText, setSourceText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+const aiFeed = [
+  {
+    id: 'demo-ai-3',
+    title: 'Sparse Mixture-of-Experts: Optimizing Compute in LLMs',
+    excerpt: 'An analysis of how dynamic routing algorithms in neural networks are drastically reducing inference costs without sacrificing reasoning capabilities.',
+    author: 'Dr. Elena Rostova',
+    date: 'Sep 20',
+    readTime: '6 min read'
+  },
+  {
+    id: 'demo-ai-4',
+    title: 'Multimodal AI in Medical Diagnostics: Beyond Image Recognition',
+    excerpt: 'Combining patient electronic health records (EHR) with radiological imaging to predict patient outcomes using unified transformer architectures.',
+    author: 'James Chen, et al.',
+    date: 'Sep 18',
+    readTime: '9 min read'
+  }
+];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!sourceText) return;
-    
-    setIsLoading(true);
-    setError('');
+const cancerFeed = [
+  {
+    id: 'demo-bio-2',
+    title: 'CAR-T Cell Therapy Efficacy in Non-Small Cell Lung Cancer',
+    excerpt: 'Recent clinical trials demonstrate unprecedented long-term remission rates when combining CAR-T therapies with targeted PD-1 inhibitors.',
+    author: 'Dr. Sarah Jenkins',
+    date: 'Sep 22',
+    readTime: '14 min read'
+  },
+  {
+    id: 'demo-bio-3',
+    title: 'Liquid Biopsies: Early Detection of Pancreatic Ductal Adenocarcinoma',
+    excerpt: 'Measuring circulating tumor DNA (ctDNA) methylation patterns to identify early-stage pancreatic cancer years before symptomatic presentation.',
+    author: 'Michael Torres, PhD',
+    date: 'Sep 16',
+    readTime: '11 min read'
+  }
+];
 
-    try {
-      // If the user doesn't provide a DOI, we generate a timestamped ID for the database
-      const documentId = doi.trim() || `doc-${Date.now()}`;
-
-      const res = await fetch('/api/process-paper', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doi: documentId, sourceText }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to process paper');
-      }
-
-      // On success, redirect to the dynamic workspace page
-      router.push(`/paper/${data.data.id}`);
-    } catch (err: any) {
-      setError(err.message);
-      setIsLoading(false);
-    }
-  };
-
+export default function DiscoveryFeed() {
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center p-6 text-neutral-900 font-sans">
-      <main className="w-full max-w-3xl bg-white border border-neutral-200 rounded-3xl shadow-sm p-8 md:p-12">
-        
-        {/* Header */}
-        <div className="flex flex-col items-center text-center mb-10">
-          <div className="h-16 w-16 bg-blue-50 text-blue-600 flex items-center justify-center rounded-2xl mb-6">
-            <BookOpen size={32} />
+    <div className="min-h-screen bg-[#FAFAFA] text-neutral-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+      
+      {/* Top Navigation */}
+      <nav className="border-b border-neutral-200 bg-white sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
+            <span className="bg-neutral-900 text-white p-1.5 rounded-lg">
+              <Microscope size={18} />
+            </span>
+            Synthetica
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4">
-            Research Synthesizer
-          </h1>
-          <p className="text-neutral-500 text-lg max-w-lg">
-            Paste any academic paper below. Our AI will extract the data, generate interactive charts, and write a scannable summary.
-          </p>
-        </div>
-
-        {/* Input Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          
-          <div>
-            <label className="block text-sm font-semibold text-neutral-700 mb-2">
-              Document DOI / Title (Optional)
-            </label>
-            <input
-              type="text"
-              value={doi}
-              onChange={(e) => setDoi(e.target.value)}
-              placeholder="e.g., 10.1038/s41586-023-06185-3"
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-neutral-700 mb-2">
-              <FileText size={16} />
-              Raw Paper Text (Required)
-            </label>
-            <textarea
-              value={sourceText}
-              onChange={(e) => setSourceText(e.target.value)}
-              placeholder="Paste the abstract, methodology, and data tables here..."
-              className="w-full h-64 bg-neutral-50 border border-neutral-200 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="p-4 bg-red-50 text-red-700 rounded-xl text-sm font-medium border border-red-100">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading || !sourceText}
-            className="w-full h-14 bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all"
+          <Link 
+            href="/upload" 
+            className="text-sm font-medium text-neutral-500 hover:text-neutral-900 flex items-center gap-2 transition-colors"
           >
-            {isLoading ? (
-              <>
-                <Loader2 size={20} className="animate-spin" />
-                Analyzing Paper & Generating UI...
-              </>
-            ) : (
-              <>
-                Generate Dashboard
-                <ArrowRight size={20} />
-              </>
-            )}
-          </button>
+            <UploadCloud size={16} />
+            Analyze a Paper
+          </Link>
+        </div>
+      </nav>
 
-        </form>
+      <main className="max-w-7xl mx-auto px-6 py-12">
+        
+        {/* CAROUSEL SECTION: Trending Research */}
+        <section className="mb-20">
+          <div className="flex items-center gap-2 mb-8">
+            <TrendingUp size={24} className="text-blue-600" />
+            <h2 className="text-2xl font-bold tracking-tight">Trending This Week</h2>
+          </div>
+          
+          {/* Horizontal Scroll Container */}
+          <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
+            {featuredPapers.map((paper) => (
+              <Link 
+                href={`/paper/${paper.id}`} 
+                key={paper.id}
+                className={`min-w-[85vw] md:min-w-[400px] lg:min-w-[500px] h-[320px] rounded-3xl p-8 flex flex-col justify-between text-white snap-center hover:scale-[1.02] transition-transform duration-300 bg-gradient-to-br ${paper.gradient} shadow-lg`}
+              >
+                <div>
+                  <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
+                    {paper.category}
+                  </span>
+                  <h3 className="text-3xl font-serif font-bold leading-tight line-clamp-3">
+                    {paper.title}
+                  </h3>
+                </div>
+                <div className="flex items-center justify-between mt-6 text-white/80 text-sm font-medium">
+                  <span className="flex items-center gap-1.5"><Clock size={16} /> {paper.readTime}</span>
+                  <span>{paper.date}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* FEED SECTION: Grid Layout for Categories */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+          
+          {/* Column 1: AI & Machine Learning */}
+          <section>
+            <div className="flex items-center gap-2 mb-8 border-b border-neutral-200 pb-4">
+              <Sparkles size={24} className="text-violet-600" />
+              <h2 className="text-2xl font-bold tracking-tight">Artificial Intelligence</h2>
+            </div>
+            <div className="flex flex-col gap-10">
+              {aiFeed.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          </section>
+
+          {/* Column 2: Cancer Research */}
+          <section>
+            <div className="flex items-center gap-2 mb-8 border-b border-neutral-200 pb-4">
+              <Microscope size={24} className="text-emerald-600" />
+              <h2 className="text-2xl font-bold tracking-tight">Oncology & Genomics</h2>
+            </div>
+            <div className="flex flex-col gap-10">
+              {cancerFeed.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          </section>
+
+        </div>
       </main>
     </div>
+  );
+}
+
+// Reusable component for the Medium-style list items
+function ArticleCard({ article }: { article: any }) {
+  return (
+    <Link href={`/paper/${article.id}`} className="group block">
+      <article className="flex flex-col gap-3">
+        {/* Title uses font-serif for editorial feel */}
+        <h3 className="text-2xl font-serif font-bold text-neutral-900 leading-snug group-hover:text-blue-600 transition-colors">
+          {article.title}
+        </h3>
+        {/* Excerpt with high line-height for readability */}
+        <p className="text-neutral-600 text-base leading-relaxed line-clamp-2">
+          {article.excerpt}
+        </p>
+        {/* Metadata row */}
+        <div className="flex items-center gap-4 text-sm font-medium text-neutral-500 mt-2">
+          <span className="text-neutral-900">{article.author}</span>
+          <span>·</span>
+          <span>{article.date}</span>
+          <span>·</span>
+          <span className="flex items-center gap-1"><Clock size={14} /> {article.readTime}</span>
+        </div>
+      </article>
+    </Link>
   );
 }
