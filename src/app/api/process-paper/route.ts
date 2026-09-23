@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType, Schema } from '@google/generative-ai';
 
 // Initialize Service Role Supabase client for backend operations
 const supabase = createClient(
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
     // STEP 2: AI Processing (Cache Miss)
     // Enforcing strict JSON schema for stable frontend charting
-    const responseSchema = {
+    const responseSchema: Schema = {
       type: SchemaType.OBJECT,
       properties: {
         blog_title: { type: SchemaType.STRING },
