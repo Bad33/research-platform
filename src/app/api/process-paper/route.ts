@@ -3,15 +3,14 @@ import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI, SchemaType, Schema } from '@google/generative-ai';
 
 // Initialize Service Role Supabase client for backend operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// Initialize Google Gen AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
 export async function POST(req: Request) {
+  // Initialize clients INSIDE the function so they don't crash Vercel's build
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
   try {
     const { doi, sourceText } = await req.json();
 
