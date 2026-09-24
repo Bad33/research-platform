@@ -57,12 +57,8 @@ export async function GET(req: Request) {
     };
 
   const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash', // (Use 'gemini-1.5-flash' here if 2.5 is deprecated)
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: responseSchema,
-        temperature: 0.2,
-      }
+      model: 'gemini-3.6-flash',
+      generationConfig: { responseMimeType: 'application/json', responseSchema, temperature: 0.3 }
     });
 
     const prompt = `Convert this academic abstract into a reader-friendly blog post. Because we only have the abstract, extract or intelligently infer a realistic data table that represents the findings so we can chart it.\n\nAuthor: ${rawAuthor}\nTitle: ${rawTitle}\nAbstract: ${rawAbstract}`;
