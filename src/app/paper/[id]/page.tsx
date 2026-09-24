@@ -2,30 +2,28 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import WorkspaceContainer from '@/components/workspace-container';
 
-// Ensure the page is dynamically rendered if relying on real-time UUID lookups
 export const dynamic = 'force-dynamic';
 
-export default async function PaperPage({ params }: { params: { id: string } }) {
-  // Initialize standard Supabase client for reading
+export default async function PaperPage({ params }: { params: Promise<{ id: string }> }) {
+  // 1. Await the params promise first
+  const { id } = await params;
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // Fetch the structurally enforced JSON payload from Postgres
+  // 2. Use the awaited ID in the query
   const { data: paper, error } = await supabase
     .from('papers')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (error || !paper) {
     notFound();
   }
 
-  return (
-    <div className="min-h-screen">
-      <WorkspaceContainer paper={paper} />
-    </div>
-  );
+  // Pass the data to your dynamic reading workspace UI
+  return <WorkspaceContainer paper={paper} />;
 }
