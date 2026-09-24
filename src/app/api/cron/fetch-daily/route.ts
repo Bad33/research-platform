@@ -8,7 +8,9 @@ export const maxDuration = 60;
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   
-  if (searchParams.get('secret') !== process.env.CRON_SECRET && process.env.NODE_ENV === 'production') {
+// Check the secure Authorization header sent by Vercel Cron
+  const authHeader = req.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
