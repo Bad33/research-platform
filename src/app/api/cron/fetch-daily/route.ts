@@ -2,160 +2,162 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI, SchemaType, Schema } from '@google/generative-ai';
 
-// Extends Vercel timeout to 60s for bulk LLM processing
+// Allow Vercel up to 60 seconds to execute the bulk fetch and AI generation
 export const maxDuration = 60; 
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+// Helper to fetch AI Research from ArXiv
+async function fetchArxivPapers() {
+  const response = await fetch('http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=5');
+  const xml = await response.text();
   
-// Check the secure Authorization header sent by Vercel Cron
+  // Basic XML parsing for edge compatibility
+  const entries = xml.match(/<entry>[\s\S]*?<\/entry>/g) || [];
+  return entries.map(entry => {
+    const idMatch = entry.match(/<id>(.*?)<\/id>/);
+    const titleMatch = entry.match(/<title>([\s\S]*?)<\/title>/);
+    const summaryMatch = entry.match(/<summary>([\s\S]*?)<\/summary>/);
+    
+    const rawId = idMatch ? idMatch[1].trim() : `arxiv-${Date.now()}`;
+    const doi = rawId.split('/abs/').pop() || rawId; 
+    
+    return {
+      doi: `arxiv-${doi}`,
+      category: 'Artificial Intelligence',
+      sourceText: `Title: ${titleMatch ? titleMatch[1].trim() : ''}\nAbstract: ${summaryMatch ? summaryMatch[1].trim() : ''}`
+    };
+  });
+}
+
+// Helper to fetch Clinical Research from Europe PMC
+async function fetchMedicalPapers() {
+  // Upgraded query to include JEV and exosomes
+  const query = encodeURIComponent(`("Blood" OR "JAMA" OR "Journal of Clinical Oncology" OR "ASH" OR "Journal of Extracellular Vesicles") AND (leukemia OR genomics OR oncology OR exosomes) AND OPEN_ACCESS:Y`);
+  const response = await fetch(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${query}&format=json&resultType=core`);
+  const data = await response.json();
+  
+  const results = data.resultList?.result || [];
+  return results.slice(0, 5).map((item: any) => ({
+    doi: item.doi || `pmc-${item.pmcid}`,
+    category: 'Oncology & Genomics',
+    sourceText: `Title: ${item.title}\nAbstract: ${item.abstractText || 'No abstract available.'}`
+  }));
+}
+
+// Vercel Cron natively uses GET requests
+export async function GET(req: Request) {
+  // 1. Security Check: Authenticate the Vercel Cron trigger
   const authHeader = req.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
+  
+  // 2. Define the Expanded Schema
   const responseSchema: Schema = {
-      type: SchemaType.OBJECT,
-      properties: {
-        blog_title: { type: SchemaType.STRING },
-        tldr_bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
-        blog_body_markdown: { type: SchemaType.STRING },
-        limitations_and_biases: { 
-          type: SchemaType.STRING, 
-          description: "A critical analysis of the study's flaws, small sample sizes, or methodological biases." 
-        },
-        github_repo_link: { 
-          type: SchemaType.STRING, 
-          description: "Extract the GitHub repository URL if mentioned, otherwise return null.",
-          nullable: true
-        },
-        trending_score: { type: SchemaType.INTEGER },
-        chart_data_json: {
-          type: SchemaType.OBJECT,
-          properties: {
-            chart_type: { 
-              type: SchemaType.STRING,
-              description: "Must be one of: 'bar', 'line', 'pie', or 'scatter' based on what fits the data best."
-            },
-            chart_title: { type: SchemaType.STRING },
-            x_axis_label: { type: SchemaType.STRING },
-            y_axis_label: { type: SchemaType.STRING },
-            data_points: {
-              type: SchemaType.ARRAY,
-              items: {
-                type: SchemaType.OBJECT,
-                properties: {
-                  label: { type: SchemaType.STRING },
-                  value: { type: SchemaType.NUMBER }
-                },
-                required: ["label", "value"]
-              }
+    type: SchemaType.OBJECT,
+    properties: {
+      blog_title: { type: SchemaType.STRING },
+      tldr_bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+      blog_body_markdown: { type: SchemaType.STRING },
+      limitations_and_biases: { type: SchemaType.STRING, description: "A critical analysis of the study's flaws, small sample sizes, or methodological biases." },
+      github_repo_link: { type: SchemaType.STRING, description: "Extract the GitHub repository URL if mentioned, otherwise return null.", nullable: true },
+      trending_score: { type: SchemaType.INTEGER },
+      chart_data_json: {
+        type: SchemaType.OBJECT,
+        properties: {
+          chart_type: { type: SchemaType.STRING, description: "Must be one of: 'bar', 'line', 'pie', or 'scatter' based on what fits the data best." },
+          chart_title: { type: SchemaType.STRING },
+          x_axis_label: { type: SchemaType.STRING },
+          y_axis_label: { type: SchemaType.STRING },
+          data_points: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                label: { type: SchemaType.STRING },
+                value: { type: SchemaType.NUMBER }
+              },
+              required: ["label", "value"]
             }
-          },
-          required: ["chart_type", "chart_title", "x_axis_label", "y_axis_label", "data_points"]
-        }
-      },
-      required: ["blog_title", "tldr_bullets", "blog_body_markdown", "limitations_and_biases", "trending_score", "chart_data_json"]
-    };
+          }
+        },
+        required: ["chart_type", "chart_title", "x_axis_label", "y_axis_label", "data_points"]
+      }
+    },
+    required: ["blog_title", "tldr_bullets", "blog_body_markdown", "limitations_and_biases", "trending_score", "chart_data_json"]
+  };
 
   const model = genAI.getGenerativeModel({
     model: 'gemini-3.6-flash',
-    generationConfig: { responseMimeType: 'application/json', responseSchema, temperature: 0.3 }
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: responseSchema,
+      temperature: 0.2,
+    }
   });
 
-  // Reusable function that processes and inserts a single paper
-  async function processAndInsertPaper(doi: string, rawTitle: string, rawAbstract: string, rawAuthor: string, category: string) {
-    const { data: existing } = await supabase.from('papers').select('id').eq('doi', doi).single();
-    if (existing) return { status: 'skipped', title: rawTitle };
-
-    const prompt = `Convert this academic abstract into a reader-friendly blog post. Because we only have the abstract, extract or intelligently infer a realistic data table that represents the findings so we can chart it.\n\nAuthor: ${rawAuthor}\nTitle: ${rawTitle}\nAbstract: ${rawAbstract}`;
-
-    const result = await model.generateContent(prompt);
-    const parsedData = JSON.parse(result.response.text());
-
-    const { error: insertError } = await supabase.from('papers').insert({
-      doi,
-      blog_title: parsedData.blog_title,
-      excerpt: parsedData.excerpt,
-      author: parsedData.author,
-      category,
-      read_time: '5 min read',
-      tldr_bullets: parsedData.tldr_bullets,
-      blog_body_markdown: parsedData.blog_body_markdown,
-      chart_data_json: parsedData.chart_data_json,
-      limitations_and_biases: parsedData.limitations_and_biases,
-      github_repo_link: parsedData.github_repo_link
-    });
-
-    if (insertError) throw new Error(insertError.message);
-    return { status: 'success', title: parsedData.blog_title };
-  }
+  const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
 
   try {
-    // 1. FETCH BULK ARXIV
-    const fetchAI = async () => {
-      const arxivRes = await fetch('http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=5');
-      const xmlText = await arxivRes.text();
-      
-      // Match all XML entry blocks instead of just the first one
-      const entries = xmlText.match(/<entry>[\s\S]*?<\/entry>/g) || [];
-      if (entries.length === 0) throw new Error("Failed to parse ArXiv entries");
+    // 3. Fetch all raw papers concurrently
+    const [arxivPapers, medicalPapers] = await Promise.all([
+      fetchArxivPapers(),
+      fetchMedicalPapers()
+    ]);
+    const allPapers = [...arxivPapers, ...medicalPapers];
 
-      // Loop over up to 5 entries and map them to Gemini requests
-      const promises = entries.slice(0, 5).map(entry => {
-        const titleMatch = entry.match(/<title>([\s\S]*?)<\/title>/);
-        const abstractMatch = entry.match(/<summary>([\s\S]*?)<\/summary>/);
-        const authorMatch = entry.match(/<name>([\s\S]*?)<\/name>/);
-        
-        const title = titleMatch ? titleMatch[1].replace(/<\/?title>/g, '').trim() : 'Unknown Title';
-        const abstract = abstractMatch ? abstractMatch[1].replace(/<\/?summary>/g, '').trim() : 'No abstract provided.';
-        const author = authorMatch ? authorMatch[1].replace(/<\/?name>/g, '').trim() : 'ArXiv Submitter';
+    // 4. Process papers through Gemini concurrently (10 requests at once)
+    const results = await Promise.allSettled(allPapers.map(async (paper) => {
+      // Check if paper already exists to save API calls & avoid duplicates
+      const { data: existing } = await supabase.from('papers').select('id').eq('doi', paper.doi).single();
+      if (existing) return { status: 'skipped', doi: paper.doi };
 
-        return processAndInsertPaper(title, title, abstract, author, 'Artificial Intelligence');
+      // Generate AI Extraction & Summary
+      const prompt = `Convert this academic paper or abstract text into a reader-friendly blog post. Because we only have the provided text, extract or intelligently infer a realistic data table that represents the key findings so we can chart it.
+
+Crucially, assign a 'trending_score' (1-100) based on:
+1. Journal/Venue Prestige: High impact factor venues (e.g., Blood, JAMA, JCO, NeurIPS, ICML) get higher baselines (80+).
+2. Topic Popularity & Breakthrough Factor: Breakthrough findings, synthetic lethality, or major foundation model advancements push toward 90-100.
+
+Document Identifier: ${paper.doi}
+Source Content:
+${paper.sourceText}`;
+
+      const aiResult = await model.generateContent(prompt);
+      const parsedData = JSON.parse(aiResult.response.text());
+
+      // Generate Vector Embedding for Recommendations
+      const embedResult = await embeddingModel.embedContent(parsedData.blog_body_markdown);
+      const vectorValues = embedResult.embedding.values;
+
+      // Insert all fields into Supabase
+      const { error: insertError } = await supabase.from('papers').insert({
+        doi: paper.doi,
+        category: paper.category, // Distinguishes between AI and Oncology feeds
+        blog_title: parsedData.blog_title,
+        tldr_bullets: parsedData.tldr_bullets,
+        blog_body_markdown: parsedData.blog_body_markdown,
+        limitations_and_biases: parsedData.limitations_and_biases,
+        github_repo_link: parsedData.github_repo_link,
+        trending_score: parsedData.trending_score,
+        chart_data_json: parsedData.chart_data_json,
+        embedding: vectorValues 
       });
 
-      return Promise.allSettled(promises);
-    };
+      if (insertError) throw new Error(insertError.message);
+      return { status: 'success', doi: paper.doi };
+    }));
 
-    // 2. FETCH BULK EUROPE PMC
-    const fetchMedical = async () => {
-      const query = `("Blood" OR "JAMA" OR "Journal of Clinical Oncology" OR "ASH") AND (leukemia OR genomics OR oncology) AND OPEN_ACCESS:Y`;
-      const encodedQuery = encodeURIComponent(query);
-      
-      // pageSize=5 pulls an array of 5 results
-      const pmcRes = await fetch(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodedQuery}&format=json&resultType=core&pageSize=5`);
-      const pmcData = await pmcRes.json();
-      
-      const resultsArray = pmcData.resultList?.result || [];
-      if (resultsArray.length === 0) throw new Error("No PMC results found");
-
-      // Loop over up to 5 papers and map them to Gemini requests
-      const promises = resultsArray.slice(0, 5).map((medPaper: any) => {
-        const title = medPaper.title;
-        const abstract = medPaper.abstractText || "No abstract provided.";
-        const author = medPaper.authorString || "Various Authors";
-        const doi = medPaper.doi || medPaper.id || title;
-
-        return processAndInsertPaper(doi, title, abstract, author, 'Oncology & Genomics');
-      });
-
-      return Promise.allSettled(promises);
-    };
-
-    // Execute AI and Medical bulk tasks simultaneously 
-    const [aiResults, medResults] = await Promise.allSettled([fetchAI(), fetchMedical()]);
-
-    return NextResponse.json({
-      message: 'Bulk fetch complete',
-      ai_batch: aiResults.status === 'fulfilled' ? aiResults.value : aiResults.reason,
-      medical_batch: medResults.status === 'fulfilled' ? medResults.value : medResults.reason
-    });
+    return NextResponse.json({ message: "Bulk fetch and vector generation complete", results });
 
   } catch (error: any) {
-    console.error('Cron Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Cron Pipeline Error:', error);
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
