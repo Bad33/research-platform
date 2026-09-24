@@ -10,7 +10,7 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   // 2. Use the awaited ID in the query
