@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Sparkles, ArrowRight, BarChart3, MessageSquare, Github, AlertTriangle, User, Bot, Loader2 } from 'lucide-react';
+import { Sparkles, ArrowRight, BarChart3, MessageSquare, Code, AlertTriangle, User, Bot, Loader2 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 export default function PaperDetailView({ paper }: { paper: any }) {
@@ -176,10 +176,10 @@ export default function PaperDetailView({ paper }: { paper: any }) {
                 )}
                 {paper?.github_repo_link && (
                   <div className="pt-3 border-t border-rose-100">
-                    <a href={paper.github_repo_link} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-medium text-zinc-900 hover:text-blue-600 transition">
-                      <Github className="w-4 h-4" />
-                      View Official Code Repository
-                    </a>
+                      <a href={paper.github_repo_link} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-medium text-zinc-900 hover:text-blue-600 transition">
+                        <Code className="w-4 h-4" />
+                        View Official Code Repository
+                      </a>
                   </div>
                 )}
               </div>
