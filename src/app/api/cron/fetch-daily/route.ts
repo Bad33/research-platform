@@ -23,6 +23,7 @@ export async function GET(req: Request) {
       author: { type: SchemaType.STRING },
       tldr_bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
       blog_body_markdown: { type: SchemaType.STRING },
+      trending_score: { type: SchemaType.INTEGER, description: "A score from 1 to 100 based on journal impact factor, topic popularity, and breakthrough significance." },
       chart_data_json: {
         type: SchemaType.OBJECT,
         properties: {
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
         required: ["chart_title", "x_axis_label", "y_axis_label", "data_points"]
       }
     },
-    required: ["blog_title", "excerpt", "author", "tldr_bullets", "blog_body_markdown", "chart_data_json"]
+    required: ["blog_title", "excerpt", "author", "tldr_bullets", "blog_body_markdown","trending_score" ,"chart_data_json"]
   };
 
   const model = genAI.getGenerativeModel({
