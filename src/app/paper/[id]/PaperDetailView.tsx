@@ -106,7 +106,34 @@ export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: 
             <div className="prose prose-zinc max-w-none prose-headings:font-serif prose-headings:font-bold prose-headings:text-zinc-950 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-zinc-700 prose-p:leading-relaxed prose-p:text-base">
               <ReactMarkdown>{formattedMarkdown}</ReactMarkdown>
             </div>
+            {/* Netflix-Style Semantic Recommendations */}
+            {relatedPapers?.length > 0 && (
+              <div className="mt-16 pt-8 border-t border-zinc-200/80">
+                <div className="flex items-center gap-2 mb-6 text-xs font-semibold uppercase tracking-wider text-zinc-800">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Related Research</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {relatedPapers.map((rp: any) => (
+                    <a 
+                      key={rp.id} 
+                      href={`/paper/${rp.id}`} 
+                      className="group block p-5 rounded-xl border border-zinc-200/80 bg-white hover:border-blue-400 hover:shadow-md transition duration-200"
+                    >
+                      <h4 className="text-sm font-serif font-bold text-zinc-900 line-clamp-2 group-hover:text-blue-600 transition">
+                        {rp.blog_title}
+                      </h4>
+                      <div className="mt-3 flex items-center gap-1 text-xs text-blue-600 font-medium">
+                        Read Analysis <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </article>
+
+          
 
           {/* Sticky Sidebar: Visualization & Questions */}
           <aside className="lg:col-span-5 space-y-6 lg:sticky lg:top-20">
