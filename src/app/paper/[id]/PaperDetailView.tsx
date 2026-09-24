@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Sparkles, ArrowRight, BarChart3, MessageSquare, Code, AlertTriangle, User, Bot, Loader2 } from 'lucide-react';
+import { Sparkles, ArrowRight, BarChart3, MessageSquare, Code, AlertTriangle, User, Bot, Loader2, Telescope } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: any, relatedPapers?: any[] }) {
@@ -52,14 +52,28 @@ export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: 
   return (
     <div className="min-h-screen bg-[#fafafa] text-zinc-900 antialiased">
       {/* Top Navigation Bar */}
+{/* Top Navigation Bar */}
       <header className="border-b border-zinc-200/80 bg-white/80 backdrop-blur-md sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between text-sm">
-          <a href="/" className="font-semibold tracking-tight text-zinc-900 hover:opacity-80 transition">
-            Synthetica
-          </a>
-          <span className="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 font-medium">
-            {paper?.category || 'Research Brief'}
-          </span>
+          
+          {/* Left Side: Logo & Badge */}
+          <div className="flex items-center gap-4">
+            <a href="/" className="font-semibold tracking-tight text-zinc-900 hover:opacity-80 transition">
+              Synthetica
+            </a>
+            <span className="hidden sm:inline-flex text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 font-medium">
+              {paper?.category || 'Research Brief'}
+            </span>
+          </div>
+
+          {/* Right Side: Global Navigation */}
+          <nav className="flex items-center gap-6 text-sm font-medium text-zinc-600">
+            <a href="/" className="hover:text-zinc-900 transition">Library</a>
+            <a href="/explore" className="hover:text-zinc-900 transition flex items-center gap-1.5">
+              <Telescope className="w-4 h-4" /> Galaxy Map
+            </a>
+          </nav>
+
         </div>
       </header>
 
