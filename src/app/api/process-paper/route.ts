@@ -64,12 +64,12 @@ export async function POST(req: Request) {
       required: ["blog_title", "tldr_bullets", "blog_body_markdown", "chart_data_json"]
     };
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-pro',
+  const model = genAI.getGenerativeModel({
+      model: 'gemini-3.6-flash',
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: responseSchema,
-        temperature: 0.2, // Low temperature for high analytical accuracy
+        temperature: 0.2,
       }
     });
 
