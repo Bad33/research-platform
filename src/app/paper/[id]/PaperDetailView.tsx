@@ -5,8 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import { Sparkles, ArrowRight, BarChart3, MessageSquare, Code, AlertTriangle, User, Bot, Loader2 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
-export default function PaperDetailView({ paper }: { paper: any }) {
-  const formattedMarkdown = paper?.blog_body_markdown?.replace(/\\n/g, '\n') || '';
+export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: any, relatedPapers?: any[] }) {
 
   // Chat State
   const [query, setQuery] = useState('');
