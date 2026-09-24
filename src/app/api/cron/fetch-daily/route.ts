@@ -73,7 +73,7 @@ export async function GET(req: Request) {
   try {
     // 1. FETCH FROM ARXIV (Computer Science & AI)
     const fetchAI = async () => {
-      const arxivRes = await fetch('http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=1');
+      const arxivRes = await fetch('http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=5');
       const xmlText = await arxivRes.text();
       
       const titleMatch = xmlText.match(/<title>([\s\S]*?)<\/title>/g);
@@ -97,7 +97,7 @@ export async function GET(req: Request) {
       const encodedQuery = encodeURIComponent(query);
       
       // Removed the strict date sort (sort=P_DATE_D) to ensure the API returns the most relevant open-access matches first
-      const pmcRes = await fetch(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodedQuery}&format=json&resultType=core&pageSize=1`);
+      const pmcRes = await fetch(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodedQuery}&format=json&resultType=core&pageSize=5`);
       const pmcData = await pmcRes.json();
       
       if (!pmcData.resultList || pmcData.resultList.result.length === 0) throw new Error("No PMC results found");
