@@ -78,9 +78,9 @@ export async function POST(req: Request) {
           1. Journal/Venue Prestige: High impact factor journals (like Blood, JAMA, JCO) or top-tier AI conferences (NeurIPS, CVPR) get higher baselines (80+).
           2. Topic Popularity & Breakthrough Factor: Highly cited topics, synthetic lethality, or major LLM advancements should push the score toward 95-100.
           
-          Author: ${rawAuthor}
-          Title: ${rawTitle}
-          Abstract: ${rawAbstract}`;
+          Author: ${author}
+          Title: ${title}
+          Abstract: ${abstract}`;
     
     const result = await model.generateContent(prompt);
     const parsedData = JSON.parse(result.response.text());
