@@ -17,6 +17,7 @@ export default async function Page({
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  // 1. Fetch the main paper
   const { data: paper, error } = await supabase
     .from('papers')
     .select('*')
@@ -27,5 +28,20 @@ export default async function Page({
     notFound();
   }
 
-  return <PaperDetailView paper={paper} />;
+  // 2. Fetch semantic recommendations using the pgvector function
+  let relatedPapers = [];
+  if (paper.embedding) {
+    const { data: related } = await supabase.rpc('match_papers', {
+      query_embedding: paper.embedding,
+      match_threshold: 0.5, // 50% similarity threshold
+      match_count: 4      // Fetch 4 just in case one is the current paper
+    });
+    
+    // Filter out the current paper from the results and keep the top 3
+    relatedPapers = (related || [])
+      .filter((rp: any) => rp.id !== paperId)
+      .slice(0, 3);
+  }
+
+  return <PaperDetailView paper={paper} relatedPapers={relatedPapers} />;
 }
