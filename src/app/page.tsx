@@ -10,11 +10,11 @@ export default async function DiscoveryFeed() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // Fetch top 10 overall for the Trending Carousel
+// Fetch top 10 recommended papers based on algorithmic scoring
   const { data: trendingFeed } = await supabase
     .from('papers')
     .select('*')
-    .order('created_at', { ascending: false })
+    .order('trending_score', { ascending: false }) // Sorts by highest impact/popularity first
     .limit(10);
 
   // Fetch specific categories for the grid feeds
