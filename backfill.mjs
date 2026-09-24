@@ -73,9 +73,9 @@ const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" })
 // Domain 1: AI/LLM Fetch (ArXiv refined to prestige)
 async function fetchPrestigeAiPapers(maxResults = 100) {
   const queryParts = [
-    '(all:"foundation+models" OR all:"multi-modal+foundation+models")',
-    '(all:"reinforcement+learning+from+human+feedback" OR all:RLHF OR all:"direct+preference+optimization")',
-    '(all:"efficient+training" OR all:"transformer-alternative" OR all:Mamba OR all:SSM)'
+    '(all:"foundation models" OR all:"multi-modal foundation models")',
+    '(all:"reinforcement learning from human feedback" OR all:RLHF OR all:"direct preference optimization")',
+    '(all:"efficient training" OR all:"transformer alternative" OR all:Mamba OR all:SSM)'
   ];
   const query = encodeURIComponent(`(${queryParts.join(' OR ')}) AND cat:cs.AI`);
   const url = `http://export.arxiv.org/api/query?search_query=${query}&sortBy=submittedDate&sortOrder=descending&max_results=${maxResults}`;
@@ -103,12 +103,10 @@ async function fetchPrestigeAiPapers(maxResults = 100) {
 // Domain 2: Cancer Research Fetch (Europe PMC prestige journals)
 async function fetchPrestigeCancerPapers(maxResults = 75) {
   const journals = '("Blood" OR "JAMA" OR "Journal of Clinical Oncology" OR "ASH" OR "Journal of Extracellular Vesicles" OR "CELL" OR "NATURE" OR "SCIENCE")';
-  const pubDateThreshold = '"2025-01-01"';
-  
-  // Use current system context for "till now"
-  const currentDateStr = '"2026-09-23"'; 
+  const pubDateThreshold = '2025-01-01';
+  const currentDateStr = '2026-09-23'; 
 
-  const query = encodeURIComponent(`(${journals}) AND (Leukemia OR Genomics OR Oncology OR cancer) AND OPEN_ACCESS:Y AND (FIRST_PUB_DATE:[${pubDateThreshold} TO ${currentDateStr}])`);
+  const query = encodeURIComponent(`(${journals}) AND (Leukemia OR Genomics OR Oncology OR cancer) AND OPEN_ACCESS:Y AND FIRST_PDATE:[${pubDateThreshold} TO ${currentDateStr}]`);
   
   const response = await fetch(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${query}&format=json&resultType=core`);
   const data = await response.json();
