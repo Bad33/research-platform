@@ -18,30 +18,48 @@ export async function GET(req: Request) {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
   const responseSchema: Schema = {
-    type: SchemaType.OBJECT,
-    properties: {
-      blog_title: { type: SchemaType.STRING },
-      excerpt: { type: SchemaType.STRING },
-      author: { type: SchemaType.STRING },
-      tldr_bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
-      blog_body_markdown: { type: SchemaType.STRING },
-      trending_score: { type: SchemaType.INTEGER, description: "A score from 1 to 100 based on journal impact factor, topic popularity, and breakthrough significance." },
-      chart_data_json: {
-        type: SchemaType.OBJECT,
-        properties: {
-          chart_title: { type: SchemaType.STRING },
-          x_axis_label: { type: SchemaType.STRING },
-          y_axis_label: { type: SchemaType.STRING },
-          data_points: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.OBJECT, properties: { label: { type: SchemaType.STRING }, value: { type: SchemaType.NUMBER } }, required: ["label", "value"] }
-          }
+      type: SchemaType.OBJECT,
+      properties: {
+        blog_title: { type: SchemaType.STRING },
+        tldr_bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        blog_body_markdown: { type: SchemaType.STRING },
+        limitations_and_biases: { 
+          type: SchemaType.STRING, 
+          description: "A critical analysis of the study's flaws, small sample sizes, or methodological biases." 
         },
-        required: ["chart_title", "x_axis_label", "y_axis_label", "data_points"]
-      }
-    },
-    required: ["blog_title", "excerpt", "author", "tldr_bullets", "blog_body_markdown","trending_score" ,"chart_data_json"]
-  };
+        github_repo_link: { 
+          type: SchemaType.STRING, 
+          description: "Extract the GitHub repository URL if mentioned, otherwise return null.",
+          nullable: true
+        },
+        trending_score: { type: SchemaType.INTEGER },
+        chart_data_json: {
+          type: SchemaType.OBJECT,
+          properties: {
+            chart_type: { 
+              type: SchemaType.STRING,
+              description: "Must be one of: 'bar', 'line', 'pie', or 'scatter' based on what fits the data best."
+            },
+            chart_title: { type: SchemaType.STRING },
+            x_axis_label: { type: SchemaType.STRING },
+            y_axis_label: { type: SchemaType.STRING },
+            data_points: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  label: { type: SchemaType.STRING },
+                  value: { type: SchemaType.NUMBER }
+                },
+                required: ["label", "value"]
+              }
+            }
+          },
+          required: ["chart_type", "chart_title", "x_axis_label", "y_axis_label", "data_points"]
+        }
+      },
+      required: ["blog_title", "tldr_bullets", "blog_body_markdown", "limitations_and_biases", "trending_score", "chart_data_json"]
+    };
 
   const model = genAI.getGenerativeModel({
     model: 'gemini-3.6-flash',
