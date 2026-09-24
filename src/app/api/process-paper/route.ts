@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI, SchemaType, Schema } from '@google/generative-ai';
 
-// Initialize Service Role Supabase client for backend operations
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
-  // Initialize clients INSIDE the function so they don't crash Vercel's build
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -14,12 +14,12 @@ export async function POST(req: Request) {
   try {
     const { doi, sourceText } = await req.json();
 
-    if (!doi) {
-      return NextResponse.json({ error: 'DOI or document identifier required' }, { status: 400 });
+    if (!doi || !sourceText) {
+      return NextResponse.json({ error: 'DOI or document identifier and source text are required' }, { status: 400 });
     }
 
     // STEP 1: Cache Lookup (<50ms resolve)
-    const { data: cachedPaper, error: cacheError } = await supabase
+    const { data: cachedPaper } = await supabase
       .from('papers')
       .select('*')
       .eq('doi', doi)
@@ -30,7 +30,6 @@ export async function POST(req: Request) {
     }
 
     // STEP 2: AI Processing (Cache Miss)
-    // Enforcing strict JSON schema for stable frontend charting
     const responseSchema: Schema = {
       type: SchemaType.OBJECT,
       properties: {
@@ -40,6 +39,10 @@ export async function POST(req: Request) {
           items: { type: SchemaType.STRING } 
         },
         blog_body_markdown: { type: SchemaType.STRING },
+        trending_score: { 
+          type: SchemaType.INTEGER, 
+          description: "A score from 1 to 100 based on journal impact factor, breakthrough significance, and topic popularity." 
+        },
         chart_data_json: {
           type: SchemaType.OBJECT,
           properties: {
@@ -61,10 +64,10 @@ export async function POST(req: Request) {
           required: ["chart_title", "x_axis_label", "y_axis_label", "data_points"]
         }
       },
-      required: ["blog_title", "tldr_bullets", "blog_body_markdown", "chart_data_json"]
+      required: ["blog_title", "tldr_bullets", "blog_body_markdown", "trending_score", "chart_data_json"]
     };
 
-  const model = genAI.getGenerativeModel({
+    const model = genAI.getGenerativeModel({
       model: 'gemini-3.6-flash',
       generationConfig: {
         responseMimeType: 'application/json',
@@ -73,15 +76,16 @@ export async function POST(req: Request) {
       }
     });
 
-    const prompt = `Convert this academic abstract into a reader-friendly blog post. Because we only have the abstract, extract or intelligently infer a realistic data table that represents the findings so we can chart it.
-          Crucially, assign a 'trending_score' (1-100) based on:
-          1. Journal/Venue Prestige: High impact factor journals (like Blood, JAMA, JCO) or top-tier AI conferences (NeurIPS, CVPR) get higher baselines (80+).
-          2. Topic Popularity & Breakthrough Factor: Highly cited topics, synthetic lethality, or major LLM advancements should push the score toward 95-100.
-          
-          Author: ${author}
-          Title: ${title}
-          Abstract: ${abstract}`;
-    
+    const prompt = `Convert this academic paper or abstract text into a reader-friendly blog post. Because we only have the provided text, extract or intelligently infer a realistic data table that represents the key findings so we can chart it.
+
+Crucially, assign a 'trending_score' (1-100) based on:
+1. Journal/Venue Prestige: High impact factor venues (e.g., Blood, JAMA, JCO, NeurIPS, ICML) get higher baselines (80+).
+2. Topic Popularity & Breakthrough Factor: Breakthrough findings, synthetic lethality, or major foundation model advancements push toward 90-100.
+
+Document Identifier: ${doi}
+Source Content:
+${sourceText}`;
+
     const result = await model.generateContent(prompt);
     const parsedData = JSON.parse(result.response.text());
 
