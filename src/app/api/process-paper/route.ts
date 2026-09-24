@@ -93,6 +93,7 @@ export async function POST(req: Request) {
         blog_title: parsedData.blog_title,
         tldr_bullets: parsedData.tldr_bullets,
         blog_body_markdown: parsedData.blog_body_markdown,
+        trending_score: parsedData.trending_score,
         chart_data_json: parsedData.chart_data_json
       })
       .select()
