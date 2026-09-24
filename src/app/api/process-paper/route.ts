@@ -34,7 +34,10 @@ export async function POST(req: Request) {
       type: SchemaType.OBJECT,
       properties: {
         blog_title: { type: SchemaType.STRING },
-        tldr_bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        tldr_bullets: { 
+          type: SchemaType.ARRAY, 
+          items: { type: SchemaType.STRING } 
+        },
         blog_body_markdown: { type: SchemaType.STRING },
         limitations_and_biases: { 
           type: SchemaType.STRING, 
@@ -45,7 +48,10 @@ export async function POST(req: Request) {
           description: "Extract the GitHub repository URL if mentioned, otherwise return null.",
           nullable: true
         },
-        trending_score: { type: SchemaType.INTEGER },
+        trending_score: { 
+          type: SchemaType.INTEGER, 
+          description: "A score from 1 to 100 based on journal impact factor, breakthrough significance, and topic popularity." 
+        },
         chart_data_json: {
           type: SchemaType.OBJECT,
           properties: {
@@ -96,7 +102,12 @@ ${sourceText}`;
     const result = await model.generateContent(prompt);
     const parsedData = JSON.parse(result.response.text());
 
-    // STEP 3: Cache Commit & Return
+    // STEP 3: Generate Vector Embedding for Semantic Search / Recommendations
+    const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const embedResult = await embeddingModel.embedContent(parsedData.blog_body_markdown);
+    const vectorValues = embedResult.embedding.values;
+
+    // STEP 4: Cache Commit & Return
     const { data: newPaper, error: insertError } = await supabase
       .from('papers')
       .insert({
@@ -107,7 +118,8 @@ ${sourceText}`;
         trending_score: parsedData.trending_score,
         chart_data_json: parsedData.chart_data_json,
         limitations_and_biases: parsedData.limitations_and_biases,
-        github_repo_link: parsedData.github_repo_link
+        github_repo_link: parsedData.github_repo_link,
+        embedding: vectorValues // Saving the 768-dimensional array
       })
       .select()
       .single();
