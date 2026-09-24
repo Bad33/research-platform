@@ -73,8 +73,15 @@ export async function POST(req: Request) {
       }
     });
 
-    const prompt = `Analyze the following academic paper text. Extract a compelling blog-style title, exactly 3 TLDR bullet points summarizing key findings, a structured markdown narrative of the background/discoveries/limitations, and extract the most prominent data table into a standardized chart array format.\n\nPaper Text: ${sourceText}`;
-
+    const prompt = `Convert this academic abstract into a reader-friendly blog post. Because we only have the abstract, extract or intelligently infer a realistic data table that represents the findings so we can chart it.
+          Crucially, assign a 'trending_score' (1-100) based on:
+          1. Journal/Venue Prestige: High impact factor journals (like Blood, JAMA, JCO) or top-tier AI conferences (NeurIPS, CVPR) get higher baselines (80+).
+          2. Topic Popularity & Breakthrough Factor: Highly cited topics, synthetic lethality, or major LLM advancements should push the score toward 95-100.
+          
+          Author: ${rawAuthor}
+          Title: ${rawTitle}
+          Abstract: ${rawAbstract}`;
+    
     const result = await model.generateContent(prompt);
     const parsedData = JSON.parse(result.response.text());
 
