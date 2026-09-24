@@ -6,8 +6,10 @@ import { Sparkles, ArrowRight, BarChart3, MessageSquare, Code, AlertTriangle, Us
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: any, relatedPapers?: any[] }) {
+  // 1. This is the variable that went missing! It normalizes the markdown.
+  const formattedMarkdown = paper?.blog_body_markdown?.replace(/\\n/g, '\n') || '';
 
-  // Chat State
+  // 2. Chat State
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<{role: 'user' | 'model', content: string}[]>([]);
@@ -106,6 +108,7 @@ export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: 
             <div className="prose prose-zinc max-w-none prose-headings:font-serif prose-headings:font-bold prose-headings:text-zinc-950 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-zinc-700 prose-p:leading-relaxed prose-p:text-base">
               <ReactMarkdown>{formattedMarkdown}</ReactMarkdown>
             </div>
+
             {/* Netflix-Style Semantic Recommendations */}
             {relatedPapers?.length > 0 && (
               <div className="mt-16 pt-8 border-t border-zinc-200/80">
@@ -132,8 +135,6 @@ export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: 
               </div>
             )}
           </article>
-
-          
 
           {/* Sticky Sidebar: Visualization & Questions */}
           <aside className="lg:col-span-5 space-y-6 lg:sticky lg:top-20">
@@ -202,10 +203,10 @@ export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: 
                 )}
                 {paper?.github_repo_link && (
                   <div className="pt-3 border-t border-rose-100">
-                      <a href={paper.github_repo_link} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-medium text-zinc-900 hover:text-blue-600 transition">
-                        <Code className="w-4 h-4" />
-                        View Official Code Repository
-                      </a>
+                    <a href={paper.github_repo_link} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-medium text-zinc-900 hover:text-blue-600 transition">
+                      <Code className="w-4 h-4" />
+                      View Official Code Repository
+                    </a>
                   </div>
                 )}
               </div>
