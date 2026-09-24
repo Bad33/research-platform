@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
   try {
-    const arxivRes = await fetch('http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=desc&max_results=1');
+    const arxivRes = await fetch('http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=1');
     const xmlText = await arxivRes.text();
     
     const titleMatch = xmlText.match(/<title>([\s\S]*?)<\/title>/g);
