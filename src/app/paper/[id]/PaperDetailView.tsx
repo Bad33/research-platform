@@ -106,6 +106,22 @@ export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: 
                   </>
                 )}
               </div>
+              {/* Metadata Badges & Link */}
+              <div className="flex flex-wrap items-center gap-3">
+                 <div className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-100 shadow-sm">
+                   <span className="text-xl font-bold text-emerald-700">{paper.trending_score}</span>
+                   <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-600">Impact</span>
+                 </div>
+                 
+                 <a 
+                   href={getSourceLink(paper.doi)} 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition shadow-sm"
+                 >
+                   <ExternalLink className="w-4 h-4" /> View Original Paper
+                 </a>
+              </div>
             </div>
 
             {/* Executive Summary Brief */}
