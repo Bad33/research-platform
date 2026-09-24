@@ -105,7 +105,9 @@ ${sourceText}`;
         tldr_bullets: parsedData.tldr_bullets,
         blog_body_markdown: parsedData.blog_body_markdown,
         trending_score: parsedData.trending_score,
-        chart_data_json: parsedData.chart_data_json
+        chart_data_json: parsedData.chart_data_json,
+        limitations_and_biases: parsedData.limitations_and_biases,
+        github_repo_link: parsedData.github_repo_link
       })
       .select()
       .single();
