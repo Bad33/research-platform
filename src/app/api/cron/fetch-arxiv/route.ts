@@ -57,7 +57,7 @@ export async function GET(req: Request) {
     };
 
   const model = genAI.getGenerativeModel({
-      model: 'gemini-3-flash', // Switched to the free-tier Flash model
+      model: 'gemini-2.5-flash', // (Use 'gemini-1.5-flash' here if 2.5 is deprecated)
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: responseSchema,
