@@ -148,15 +148,25 @@ async function runBackfill() {
       }
 
       // 4. Extract Data with Gemini 1.5 Flash
-      const prompt = `Convert this academic paper or abstract text into a reader-friendly blog post. Because we only have the provided text, extract or intelligently infer a realistic data table that represents the key findings so we can chart it.
-
-Crucially, assign a 'trending_score' (1-100) based on:
-1. Journal/Venue Prestige: High impact factor venues (e.g., Blood, JAMA, JCO, NeurIPS, ICML) get higher baselines (80+). Breakthrough findings or multi-modal LLM advancements push toward 90-100.
-2. Breakthrough Factor: Breakthrough clinical data or multi-modal foundation model advancements push toward 90-100.
-
-Document Identifier: ${paper.doi}
-Source Content:
-${paper.sourceText}`;
+      const prompt = `You are an expert researcher explaining a complex paper to a peer. 
+      Do NOT write a generic, fluffy blog post. Write a highly structured, pedagogical deep-dive in Markdown that allows the reader to fully understand the mechanics of the study without reading the original paper.
+      
+      Structure the 'blog_body_markdown' exactly like this:
+      ### The Core Problem
+      [Explain precisely why this research is necessary and what gap in the current landscape it fills]
+      
+      ### Methodology & Architecture
+      [Explain exactly how they built the model, designed the clinical trial, or structured the data. Be technical and specific.]
+      
+      ### Key Findings & Metrics
+      [Detail the specific outcomes, benchmark scores, or survival rates discovered.]
+      
+      Extract or intelligently infer a realistic data table representing the key findings so we can chart it.
+      Assign a 'trending_score' (1-100) based on venue prestige and breakthrough factor.
+      
+      Document Identifier: ${paper.doi}
+      Source Content:
+      ${paper.sourceText}`;
 
       const aiResult = await model.generateContent(prompt);
       const parsedData = JSON.parse(aiResult.response.text());
