@@ -13,7 +13,7 @@ export default function ExplorerPage() {
   const [loading, setLoading] = useState(true);
   const [selectedNode, setSelectedNode] = useState<any>(null);
   
-  const fgRef = useRef<any>();
+  const fgRef = useRef<any>(null);
 
   useEffect(() => {
     async function fetchGraph() {
