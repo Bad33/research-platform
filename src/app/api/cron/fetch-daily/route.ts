@@ -90,11 +90,14 @@ export async function GET(req: Request) {
     };
 
     // 2. FETCH FROM EUROPE PMC (Clinical Oncology & Genomics - Blood, JAMA, JCO)
+
     const fetchMedical = async () => {
-      // Queries high-impact journals for open-access papers targeting leukemia or genomics, sorted by newest
-      const query = `(JOURNAL:"Blood" OR JOURNAL:"JAMA" OR JOURNAL:"Journal of Clinical Oncology") AND (leukemia OR genomics OR oncology) AND OPEN_ACCESS:Y`;
+      // Searches for the journal/conference names alongside topics, ensuring Open Access
+      const query = `("Blood" OR "JAMA" OR "Journal of Clinical Oncology" OR "ASH") AND (leukemia OR genomics OR oncology) AND OPEN_ACCESS:Y`;
       const encodedQuery = encodeURIComponent(query);
-      const pmcRes = await fetch(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodedQuery}&format=json&resultType=core&pageSize=1&sort=P_DATE_D`);
+      
+      // Removed the strict date sort (sort=P_DATE_D) to ensure the API returns the most relevant open-access matches first
+      const pmcRes = await fetch(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodedQuery}&format=json&resultType=core&pageSize=1`);
       const pmcData = await pmcRes.json();
       
       if (!pmcData.resultList || pmcData.resultList.result.length === 0) throw new Error("No PMC results found");
