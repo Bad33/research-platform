@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Sparkles, ArrowRight, BarChart3, MessageSquare, Code, AlertTriangle, User, Bot, Loader2, Telescope } from 'lucide-react';
+import { Sparkles, ArrowRight,ExternalLink, BarChart3, MessageSquare, Code, AlertTriangle, User, Bot, Loader2, Telescope } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: any, relatedPapers?: any[] }) {
@@ -47,6 +47,12 @@ export default function PaperDetailView({ paper, relatedPapers = [] }: { paper: 
     } finally {
       setIsLoading(false);
     }
+  };
+  const getSourceLink = (doi: string) => {
+    if (!doi) return '#';
+    if (doi.startsWith('arxiv-')) return `https://arxiv.org/abs/${doi.replace('arxiv-', '')}`;
+    if (doi.startsWith('pmc-')) return `https://www.ncbi.nlm.nih.gov/pmc/articles/${doi.replace('pmc-', '')}`;
+    return `https://doi.org/${doi}`;
   };
 
   return (
