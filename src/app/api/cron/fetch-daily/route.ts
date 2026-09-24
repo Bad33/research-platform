@@ -85,7 +85,9 @@ export async function GET(req: Request) {
       read_time: '5 min read',
       tldr_bullets: parsedData.tldr_bullets,
       blog_body_markdown: parsedData.blog_body_markdown,
-      chart_data_json: parsedData.chart_data_json
+      chart_data_json: parsedData.chart_data_json,
+      limitations_and_biases: parsedData.limitations_and_biases,
+      github_repo_link: parsedData.github_repo_link
     });
 
     if (insertError) throw new Error(insertError.message);
