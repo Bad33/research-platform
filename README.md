@@ -40,3 +40,7 @@
 ```bash
 git clone [https://github.com/yourusername/synthetica.git](https://github.com/yourusername/synthetica.git)
 cd synthetica
+
+2. Install dependencies
+npm install
+npm install dotenv
