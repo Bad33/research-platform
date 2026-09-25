@@ -4,7 +4,7 @@
 
   <img src="https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
-  <img src="https://img.shields.io/badge/Gemini-AI-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
+  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
 </div>
 
@@ -39,3 +39,32 @@
 ```bash
 git clone [https://github.com/yourusername/synthetica.git](https://github.com/yourusername/synthetica.git)
 cd synthetica
+
+**2. Install dependencies **
+```bash
+npm install
+npm install dotenv # Required for the local backfill script
+
+**3. Configure Environment Variables**
+Create a .env.local file in the root directory:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+GEMINI_API_KEY=your_google_ai_studio_key
+CRON_SECRET=your_custom_cron_password
+
+**4. Database Setup (Supabase SQL Editor)**
+Ensure your papers table is configured with a vector column for embeddings. Run this custom RPC function to power the Galaxy Map:
+
+```bash
+CREATE OR REPLACE FUNCTION get_graph_data(similarity_threshold float)
+RETURNS json
+LANGUAGE plpgsql STABLE
+AS $$ DECLARE   nodes json;   links json; BEGIN   SELECT json_agg(json_build_object('id', id, 'title', blog_title, 'category', category, 'score', trending_score, 'tldr', tldr_bullets)) INTO nodes FROM papers;      SELECT json_agg(json_build_object('source', p1.id, 'target', p2.id, 'value', 1 - (p1.embedding <=> p2.embedding))) INTO links   FROM papers p1 JOIN papers p2 ON p1.id < p2.id   WHERE 1 - (p1.embedding <=> p2.embedding) > similarity_threshold;      RETURN json_build_object('nodes', COALESCE(nodes, '[]'::json), 'links', COALESCE(links, '[]'::json)); END; $$;
+
+**5. Run the Development Server**
+
+```bash
+npm run dev
